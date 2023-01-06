@@ -1,16 +1,30 @@
 const canvasSketch = require('canvas-sketch');
+const random = require('canvas-sketch-util/random');
+const math = require('canvas-sketch-util/math');
+const tp = require('tweakpane');
+
+const params = {
+  cells: 24,
+  scaleMin: 1,
+  scaleMax: 30,
+  frequency: 0.001,
+  amplitude: 0.2,
+  animate: true,
+  frame: 0
+};
 
 const settings = {
-  dimensions: [ 1080, 1080 ]
+  dimensions: [ 1080, 1080 ],
+  animate: true
 };
 
 const sketch = () => {
-  return ({ context, width, height }) => {
+  return ({ context, width, height, frame }) => {
     context.fillStyle = 'white';
     context.fillRect(0, 0, width, height);
 
-    const cols = 10;
-    const rows = 10;
+    const cols = params.cells;
+    const rows = params.cells;
     const numCells = cols * rows;
 
     const gridw = width * 0.8;
@@ -21,20 +35,35 @@ const sketch = () => {
     const margy = (height - gridh) * 0.5;
 
     for ( let i = 0; i < numCells; i++ ) {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
+      let col = i % cols;
+      let row = Math.floor(i / cols);
 
-      const x = row * cellw;
-      const y = col * cellh;
+      const x = (row * cellw);
+      const y = (col * cellh);
       const w = cellw * 0.8;
       const h = cellh * 0.8;
+
+      const f = params.animate ? frame : params.frame;
+
+      // const n = random.noise2D(x + frame * 10, y, params.frequency);
+      const n = random.noise3D(x, y, f * 10, params.frequency)
+
+      const angle = n * Math.PI * params.amplitude;
+
+      // the following three formulas have the same output variable.
+      // const scale = (n + 1) / 2 * 30;
+      // const scale = (n * 0.5 + 0.5) * 30;
+      const scale = math.mapRange(n, -1, 1, params.scaleMin, params.scaleMax);
 
       context.save();
       context.translate(x, y);
       context.translate(margx, margy);
       context.translate(cellw * 0.5, cellh * 0.5);
+      context.rotate(angle);
 
-      context.lineWidth = 3;
+      context.lineWidth = scale;
+      context.strokeStyle = 'lightgrey';
+      context.lineCap = 'round';
 
       context.beginPath();
       context.moveTo(w * -0.5, 0);
@@ -46,4 +75,21 @@ const sketch = () => {
   };
 };
 
+const createPane = () => {
+  const pane = new tp.Pane();
+  let folder;
+
+  folder = pane.addFolder({ title: 'Grid'});
+  folder.addInput(params, 'cells', { min: 2, max: 50, step: 1});
+  folder.addInput(params, 'scaleMin', { min: 1, max: 40, step: 1});
+  folder.addInput(params, 'scaleMax', { min: 1, max: 40, step: 1});
+
+  folder = pane.addFolder({ title: 'Noise'});
+  folder.addInput(params, 'frequency', { min: -0.01, max: 0.01 });
+  folder.addInput(params, 'amplitude', { min: 0, max: 1 });
+  folder.addInput(params, 'animate');
+  folder.addInput(params, 'frame', { min: 0, max: 999});
+}
+
+createPane();
 canvasSketch(sketch, settings);
