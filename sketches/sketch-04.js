@@ -10,12 +10,13 @@ const params = {
   frequency: 0.001,
   amplitude: 0.2,
   animate: true,
-  frame: 0
+  frame: 0,
+  lineCaps: 'square'
 };
 
 const settings = {
   dimensions: [ 1080, 1080 ],
-  animate: true
+  animate: params.animate
 };
 
 const sketch = () => {
@@ -63,7 +64,7 @@ const sketch = () => {
 
       context.lineWidth = scale;
       context.strokeStyle = 'lightgrey';
-      context.lineCap = 'round';
+      context.lineCap = params.lineCaps;
 
       context.beginPath();
       context.moveTo(w * -0.5, 0);
@@ -83,12 +84,14 @@ const createPane = () => {
   folder.addInput(params, 'cells', { min: 2, max: 50, step: 1});
   folder.addInput(params, 'scaleMin', { min: 1, max: 40, step: 1});
   folder.addInput(params, 'scaleMax', { min: 1, max: 40, step: 1});
+  folder.addInput(params, 'lineCaps', { options: { square: 'square', round: 'round'}});
 
   folder = pane.addFolder({ title: 'Noise'});
   folder.addInput(params, 'frequency', { min: -0.01, max: 0.01 });
   folder.addInput(params, 'amplitude', { min: 0, max: 1 });
   folder.addInput(params, 'animate');
   folder.addInput(params, 'frame', { min: 0, max: 999});
+  
 }
 
 createPane();
